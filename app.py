@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm
 from models import db, connect_db, User, Message
+import pdb
 
 CURR_USER_KEY = "curr_user"
 
@@ -23,6 +24,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
+
+app.app_context().push()
 
 
 ##############################################################################
@@ -113,7 +116,9 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    # IMPLEMENT THIS
+    do_logout()
+    flash("Successfully logged out!")
+    return redirect('/')
 
 
 ##############################################################################
