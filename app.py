@@ -255,6 +255,46 @@ def delete_user():
 
     return redirect("/signup")
 
+@app.route('/users/add_like/<int:message_id>', methods=['POST'])
+def add_liked_message(message_id):
+    '''Add a message to users liked messages'''
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    message = Message.query.get_or_404(message_id)
+    g.user.likes.append(message)
+
+    db.session.add(g.user)
+    db.session.commit()
+
+    return redirect('/')
+
+@app.route('/users/remove_like/<int:message_id>', methods=['POST'])
+def remove_liked_message(message_id):
+    '''Add a message to users liked messages'''
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    message = Message.query.get_or_404(message_id)
+    g.user.likes.remove(message)
+
+    db.session.add(g.user)
+    db.session.commit()
+
+    return redirect('/')
+
+@app.route('/users/<int:user_id>/likes')
+def show_user_likes(user_id):
+    '''Show users liked warbles'''
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    user = User.query.get_or_404(user_id)
+    return render_template('users/likes.html', user=user)
+
 
 ##############################################################################
 # Messages routes:
@@ -321,7 +361,6 @@ def homepage():
     #need to use g.user.following
     # where message.user_id IN g.user.following + g.user.user_id
     if g.user:
-        g.user.following
         messages = (Message
                     .query
                     .filter(Message.user_id.in_([follow.id for follow in g.user.following]) | (Message.user_id == str(g.user.id)))
