@@ -219,19 +219,31 @@ def profile():
         flash("Access unauthorized.", "danger")
         return redirect("/")
     
-    form = UserEditForm.populate(obj=g.user)
+    form = UserEditForm(obj=g.user)
 
     if form.validate_on_submit():
-        user = User.authenticate(form.username.data,
+        user = User.authenticate(g.user.username,
                                  form.password.data)
 
         if user:
-            for field in form.data:
-                user[f'{field}'] = field
+            user.username = form.data['username']
+            user.email = form.data['email']
+            user.bio = form.data['bio']
+            user.header_image_url = form.data['header_image_url']
+            user.image_url = form.data['image_url']
+
+            db.session.add(user)
+            db.session.commit()
+
+            session[CURR_USER_KEY] = user.id
+            # g.user = User.query.get(session[CURR_USER_KEY])
+            g.user = user
+
             flash(f"Hello, {user.username}!", "success")
-            return redirect("/")
+            return redirect(f"/users/{user.id}")
 
         flash("Invalid credentials.", 'danger')
+        return redirect('/')
     
     return render_template('users/edit.html', user=g.user, form=form)
 
