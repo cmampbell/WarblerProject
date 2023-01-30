@@ -236,7 +236,6 @@ def profile():
             db.session.commit()
 
             session[CURR_USER_KEY] = user.id
-            # g.user = User.query.get(session[CURR_USER_KEY])
             g.user = user
 
             flash(f"Hello, {user.username}!", "success")
@@ -325,9 +324,14 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
+    #need to user message.user_id
+    #need to use g.user.following
+    # where message.user_id IN g.user.following + g.user.user_id
     if g.user:
+        g.user.following
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_([follow.id for follow in g.user.following]) | (Message.user_id == str(g.user.id)))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
