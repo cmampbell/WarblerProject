@@ -236,7 +236,6 @@ def profile():
             db.session.commit()
 
             session[CURR_USER_KEY] = user.id
-            g.user = user
 
             flash(f"Hello, {user.username}!", "success")
             return redirect(f"/users/{user.id}")
