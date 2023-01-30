@@ -226,16 +226,10 @@ def profile():
                                  form.password.data)
 
         if user:
-            user.username = form.data['username']
-            user.email = form.data['email']
-            user.bio = form.data['bio']
-            user.header_image_url = form.data['header_image_url']
-            user.image_url = form.data['image_url']
+            user.update_info(form.data)
 
             db.session.add(user)
             db.session.commit()
-
-            session[CURR_USER_KEY] = user.id
 
             flash(f"Hello, {user.username}!", "success")
             return redirect(f"/users/{user.id}")

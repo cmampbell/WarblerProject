@@ -129,6 +129,13 @@ class User(db.Model):
 
         found_user_list = [user for user in self.following if user == other_user]
         return len(found_user_list) == 1
+    
+    def update_info(self, data):
+            self.username = data['username']
+            self.email = data['email']
+            self.bio = data['bio']
+            self.header_image_url = data['header_image_url']
+            self.image_url = data['image_url']
 
     @classmethod
     def signup(cls, username, email, password, image_url):
