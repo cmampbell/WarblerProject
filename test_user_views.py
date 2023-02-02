@@ -8,7 +8,7 @@
 import os
 from unittest import TestCase
 
-from models import db, User, Message, Follows
+from models import db, User, Message, Follows, Likes
 from flask import g, session
 
 # BEFORE we import our app, let's set an environmental variable
@@ -155,6 +155,7 @@ class UserViewsTestCase(TestCase):
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
+        Likes.query.delete()
 
         self.client = app.test_client()
 
@@ -171,6 +172,7 @@ class UserViewsTestCase(TestCase):
 
         #generate messages for main_user
         main_user.messages = [Message(text=f'test message {num}', user_id = main_user.id) for num in range(5)]
+        main_user.likes.append(main_user.messages[0])
         
         db.session.commit()
 
@@ -451,8 +453,86 @@ class UserViewsTestCase(TestCase):
             self.assertIsNone(session.get('curr_user'))
 
             #check to see that user is deleted from database
-            self.assertIsNone(User.query.first(self.user.id))
+            self.assertIsNone(User.query.get(self.user.id))
 
+    def test_anon_delete_user(self):
+        with self.client:
 
+            resp = self.client.post('/users/delete')
 
-    
+            #check if we get a redirect
+            self.assertEqual(resp.status_code, 302)
+
+            #check the location of the redirect
+            self.assertEqual(resp.location, 'http://localhost/')
+
+    def test_add_liked_message(self):
+        with self.client:
+            self.client.post('/login', data={'username': 'testuser', 'password': 'testacct'})
+
+            resp = self.client.post(f'/users/add_like/{self.user.messages[1].id}')
+
+            #check that we get a redirect status code
+            self.assertEqual(resp.status_code, 302)
+
+            #check that we get redirected to homepage
+            self.assertEqual(resp.location, 'http://localhost/')
+
+            #check that a like was added to users likes
+            self.assertEqual(len(self.user.likes), 2)
+
+            #check that the new message has a like
+            self.assertEqual(len(self.user.messages[1].likes), 1)
+
+    def test_anon_add_liked_message(self):
+        with self.client:
+
+            resp = self.client.post('/users/add_like/3')
+
+            #check if we get a redirect
+            self.assertEqual(resp.status_code, 302)
+
+            #check the location of the redirect
+            self.assertEqual(resp.location, 'http://localhost/')
+
+    def test_remove_liked_message(self):
+        with self.client:
+            self.client.post('/login', data={'username': 'testuser', 'password': 'testacct'})
+
+            resp = self.client.post(f'/users/remove_like/{self.user.messages[0].id}')
+
+            #check that we get a redirect status code
+            self.assertEqual(resp.status_code, 302)
+
+            #check that we get redirected to homepage
+            self.assertEqual(resp.location, 'http://localhost/')
+
+            #check that the user has no likes
+            self.assertEqual(len(self.user.likes), 0)
+
+            #check that the message has no likes
+            self.assertEqual(len(self.user.messages[0].likes), 0)
+
+    def test_anon_remove_liked_message(self):
+        with self.client:
+
+            resp = self.client.post('/users/remove_like/3')
+
+            #check if we get a redirect
+            self.assertEqual(resp.status_code, 302)
+
+            #check the location of the redirect
+            self.assertEqual(resp.location, 'http://localhost/')
+
+    def test_show_user_likes(self):
+        with self.client:
+            self.client.post('/login', data={'username': 'testuser', 'password': 'testacct'})
+
+            resp = self.client.get(f'/users/{self.user.id}/likes')
+            html = resp.get_data(as_text=True)
+
+            #check that we get an ok status code
+            self.assertEqual(resp.status_code, 200)
+
+            #check that html contains messages user likes
+            self.assertIn(self.user.likes[0].text, html)
