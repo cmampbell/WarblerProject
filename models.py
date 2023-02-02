@@ -188,7 +188,7 @@ class Message(db.Model):
     )
 
     text = db.Column(
-        db.String(140),
+        db.String(length=140),
         nullable=False,
     )
 
