@@ -536,3 +536,13 @@ class UserViewsTestCase(TestCase):
 
             #check that html contains messages user likes
             self.assertIn(self.user.likes[0].text, html)
+
+    def test_anon_show_user_likes(self):
+        with self.client:
+            resp = self.client.get(f'/users/{self.user.id}/likes')
+
+            #check if we get a redirect
+            self.assertEqual(resp.status_code, 302)
+
+            #check the location of the redirect
+            self.assertEqual(resp.location, 'http://localhost/')
